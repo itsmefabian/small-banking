@@ -222,5 +222,68 @@
         </tbody>
       }
     </table>
+
+    @if (pagination(); as p) {
+      @if (p.totalPages > 1) {
+        <nav
+          aria-label="Transactions pages"
+          class="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4"
+        >
+          <p class="text-sm text-slate-700" aria-live="polite">
+            <span class="font-semibold text-slate-900">{{ p.from }}–{{ p.to }}</span>
+            of {{ p.totalItems }}
+            <span class="sr-only">, page {{ p.page }} of {{ p.totalPages }}</span>
+          </p>
+          <div class="flex items-center gap-1">
+            <button
+              type="button"
+              class="btn-icon bg-slate-100 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-slate-400"
+              (click)="previous()"
+              [disabled]="p.page === 1"
+              aria-label="Previous page"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                class="size-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.25"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m15 6-6 6 6 6" />
+              </svg>
+            </button>
+            <span
+              class="min-w-14 text-center text-sm font-semibold tabular-nums text-slate-900"
+              aria-hidden="true"
+            >
+              {{ p.page }} / {{ p.totalPages }}
+            </span>
+            <button
+              type="button"
+              class="btn-icon bg-slate-100 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-slate-400"
+              (click)="next()"
+              [disabled]="p.page === p.totalPages"
+              aria-label="Next page"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                class="size-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.25"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m9 6 6 6-6 6" />
+              </svg>
+            </button>
+          </div>
+        </nav>
+      }
+    }
   }
 </section>

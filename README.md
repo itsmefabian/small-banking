@@ -13,7 +13,7 @@ Built with Angular 22 (standalone components, signals, Signal Forms, zoneless) a
 - **Quick entry**: a bottom sheet (dialog on desktop) with an Expense/Income toggle, preset
   amounts and an optional description. Every add or delete can be undone from a toast.
 - **History**: transactions grouped by day (Today, Yesterday, …) with All/Expenses/Income
-  filters. Shown as a list on mobile and a table on desktop.
+  filters, paginated 5 per page. Shown as a list on mobile and a table on desktop.
 - **Micro-savings**: create goals, add $1 or transfer the day's leftover. Each deposit is recorded
   as an expense of today's budget.
 - **PWA**: installable and works offline. Shows an offline notice and an "Update" prompt when a new
