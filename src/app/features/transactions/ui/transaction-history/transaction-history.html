@@ -1,0 +1,226 @@
+<section aria-labelledby="history-title" class="card p-4 sm:p-6">
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <h2 id="history-title" class="text-lg font-semibold tracking-tight text-slate-900">
+      Transactions
+    </h2>
+    <fieldset class="segmented">
+      <legend class="sr-only">Filter transactions</legend>
+      @for (option of filters; track option.value) {
+        <button
+          type="button"
+          class="segment"
+          (click)="filter.set(option.value)"
+          [attr.aria-pressed]="filter() === option.value"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </fieldset>
+  </div>
+
+  <ng-template #dayLabel let-group>
+    @if (group.key === today()) {
+      Today
+    } @else if (group.key === yesterday()) {
+      Yesterday
+    } @else {
+      {{ dayDate(group) | date: 'EEEE, MMM d' }}
+    }
+  </ng-template>
+
+  <ng-template #dayTotals let-group>
+    <span class="tabular-nums">
+      −{{ group.expenses | currency }}
+      @if (group.income > 0) {
+        <span class="text-emerald-800">· +{{ group.income | currency }}</span>
+      }
+    </span>
+  </ng-template>
+
+  <ng-template #txIcon let-tx>
+    <span
+      class="grid size-10 shrink-0 place-items-center rounded-2xl"
+      [class]="tx.type === 'expense' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'"
+      aria-hidden="true"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        class="size-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+      >
+        <path [attr.d]="tx.type === 'expense' ? 'M7 7l10 10m0-8v8H9' : 'M17 17 7 7m0 8V7h8'" />
+      </svg>
+    </span>
+  </ng-template>
+
+  @if (groups().length === 0) {
+    <div class="grid place-items-center gap-3 py-12 text-center">
+      <span
+        class="grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-700"
+        aria-hidden="true"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="size-7"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M4 7h16M4 12h16M4 17h10" />
+        </svg>
+      </span>
+      <p class="font-semibold text-slate-900">
+        {{ filter() === 'all' ? 'No transactions yet' : 'Nothing matches this filter' }}
+      </p>
+      <p class="max-w-xs text-sm text-slate-700">
+        Add an expense or income and watch your balance update instantly.
+      </p>
+    </div>
+  } @else {
+    <!-- Mobile: list grouped by day -->
+    <div class="grid gap-6 md:hidden">
+      @for (group of groups(); track group.key) {
+        <section [attr.aria-labelledby]="'day-' + group.key">
+          <h3
+            [id]="'day-' + group.key"
+            class="mb-2 flex items-baseline justify-between px-1 text-xs font-semibold uppercase tracking-wide text-slate-600"
+          >
+            <ng-container *ngTemplateOutlet="dayLabel; context: { $implicit: group }" />
+            <span class="normal-case tracking-normal">
+              <ng-container *ngTemplateOutlet="dayTotals; context: { $implicit: group }" />
+            </span>
+          </h3>
+          <ul class="grid gap-1">
+            @for (tx of group.transactions; track tx.id) {
+              <li
+                class="flex items-center gap-3 rounded-2xl py-2 pl-2 pr-1 transition hover:bg-slate-50"
+              >
+                <ng-container *ngTemplateOutlet="txIcon; context: { $implicit: tx }" />
+                <div class="min-w-0 flex-1">
+                  <p class="truncate font-semibold text-slate-900">{{ label(tx) }}</p>
+                  <p class="text-sm text-slate-600">
+                    <span class="sr-only"
+                      >{{ tx.type === 'expense' ? 'Expense' : 'Income' }},
+                    </span>
+                    {{ tx.date | date: 'shortTime' }}
+                  </p>
+                </div>
+                <span
+                  class="font-semibold tabular-nums"
+                  [class]="tx.type === 'expense' ? 'text-slate-900' : 'text-emerald-800'"
+                >
+                  {{ tx.type === 'expense' ? '−' : '+' }}{{ tx.amount | currency }}
+                </span>
+                <button
+                  type="button"
+                  class="btn-icon size-11 hover:text-red-700"
+                  (click)="remove.emit(tx)"
+                  [attr.aria-label]="'Delete ' + label(tx)"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    class="size-5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  >
+                    <path d="M6 7h12M9 7V5h6v2m-7 3v7m4-7v7m4-7v7M7 7l1 13h8l1-13" />
+                  </svg>
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+
+    <!-- Desktop: table, one tbody per day -->
+    <table class="hidden w-full border-separate border-spacing-0 text-left text-sm md:table">
+      <caption class="sr-only">
+        Transactions by day
+      </caption>
+      <thead>
+        <tr class="text-xs uppercase tracking-wide text-slate-600">
+          <th scope="col" class="pb-3 pl-3 font-semibold">Description</th>
+          <th scope="col" class="pb-3 font-semibold">Type</th>
+          <th scope="col" class="w-28 pb-3 font-semibold">Time</th>
+          <th scope="col" class="pb-3 text-right font-semibold">Amount</th>
+          <th scope="col" class="w-14 pb-3"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      @for (group of groups(); track group.key) {
+        <tbody>
+          <tr>
+            <th
+              scope="rowgroup"
+              colspan="3"
+              class="rounded-l-xl bg-slate-50 py-2 pl-3 font-semibold text-slate-900"
+            >
+              <ng-container *ngTemplateOutlet="dayLabel; context: { $implicit: group }" />
+            </th>
+            <td colspan="2" class="rounded-r-xl bg-slate-50 py-2 pr-3 text-right text-slate-700">
+              <ng-container *ngTemplateOutlet="dayTotals; context: { $implicit: group }" />
+            </td>
+          </tr>
+          @for (tx of group.transactions; track tx.id) {
+            <tr class="group">
+              <td class="rounded-l-xl py-2 pl-3 group-hover:bg-slate-50">
+                <div class="flex items-center gap-3">
+                  <ng-container *ngTemplateOutlet="txIcon; context: { $implicit: tx }" />
+                  <span class="font-semibold text-slate-900">{{ label(tx) }}</span>
+                </div>
+              </td>
+              <td class="py-2 group-hover:bg-slate-50">
+                <span
+                  class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                  [class]="
+                    tx.type === 'expense'
+                      ? 'bg-red-50 text-red-700'
+                      : 'bg-emerald-50 text-emerald-800'
+                  "
+                >
+                  {{ tx.type === 'expense' ? 'Expense' : 'Income' }}
+                </span>
+              </td>
+              <td class="py-2 tabular-nums text-slate-600 group-hover:bg-slate-50">
+                {{ tx.date | date: 'shortTime' }}
+              </td>
+              <td
+                class="py-2 text-right font-semibold tabular-nums group-hover:bg-slate-50"
+                [class]="tx.type === 'expense' ? 'text-slate-900' : 'text-emerald-800'"
+              >
+                {{ tx.type === 'expense' ? '−' : '+' }}{{ tx.amount | currency }}
+              </td>
+              <td class="rounded-r-xl py-2 pr-1 text-right group-hover:bg-slate-50">
+                <button
+                  type="button"
+                  class="btn-icon ml-auto hover:text-red-700"
+                  (click)="remove.emit(tx)"
+                  [attr.aria-label]="'Delete ' + label(tx)"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    class="size-5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  >
+                    <path d="M6 7h12M9 7V5h6v2m-7 3v7m4-7v7m4-7v7M7 7l1 13h8l1-13" />
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      }
+    </table>
+  }
+</section>

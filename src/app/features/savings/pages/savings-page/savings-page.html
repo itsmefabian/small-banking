@@ -1,0 +1,132 @@
+<header class="mb-6 flex flex-wrap items-end justify-between gap-3">
+  <div>
+    <p class="text-sm font-medium text-slate-600">Small deposits, big goals</p>
+    <h1 class="mt-0.5 text-3xl font-semibold tracking-tight text-slate-900">Savings</h1>
+  </div>
+  @if (savings.goals().length > 0) {
+    <button
+      type="button"
+      class="btn"
+      [class]="formOpen() ? 'bg-slate-200 text-slate-900 hover:bg-slate-300' : 'btn-primary'"
+      (click)="formOpen.set(!formOpen())"
+      [attr.aria-expanded]="formOpen()"
+      aria-controls="new-goal-panel"
+    >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        class="size-5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+      >
+        <path [attr.d]="formOpen() ? 'M6 6l12 12M18 6 6 18' : 'M12 5v14M5 12h14'" />
+      </svg>
+      {{ formOpen() ? 'Cancel' : 'New goal' }}
+    </button>
+  }
+</header>
+
+<dl class="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+  <div
+    class="relative isolate col-span-2 overflow-hidden rounded-3xl bg-linear-to-br from-brand-600 via-brand-700 to-violet-800 p-6 text-white shadow-xl shadow-brand-900/25 lg:col-span-1"
+  >
+    <div
+      class="pointer-events-none absolute -right-12 -top-16 -z-10 size-44 rounded-full bg-white/15 blur-2xl"
+      aria-hidden="true"
+    ></div>
+    <dt class="text-sm font-medium text-white">Total saved</dt>
+    <dd class="mt-2 text-4xl font-semibold tracking-tight tabular-nums">
+      {{ savings.totalSaved() | currency }}
+    </dd>
+  </div>
+  <div class="card p-5">
+    <dt class="text-sm font-medium text-slate-700">Available today</dt>
+    <dd
+      class="mt-2 text-2xl font-semibold tracking-tight tabular-nums"
+      [class]="savings.available() < 0 ? 'text-red-700' : 'text-slate-900'"
+    >
+      {{ savings.available() | currency }}
+    </dd>
+  </div>
+  <div class="card p-5">
+    <dt class="text-sm font-medium text-slate-700">Active goals</dt>
+    <dd class="mt-2 text-2xl font-semibold tracking-tight tabular-nums text-slate-900">
+      {{ activeGoals() }}
+    </dd>
+  </div>
+</dl>
+
+<div role="status">
+  @if (notice(); as current) {
+    <div
+      class="mb-6 flex items-center gap-3 rounded-2xl px-4 py-2 text-sm font-medium ring-1"
+      [class]="
+        current.tone === 'error'
+          ? 'bg-red-50 text-red-800 ring-red-200'
+          : 'bg-emerald-50 text-emerald-900 ring-emerald-200'
+      "
+    >
+      <p class="flex-1">{{ current.message }}</p>
+      @if (current.undo) {
+        <button
+          type="button"
+          (click)="undo()"
+          class="rounded-xl px-3 py-1.5 font-semibold transition hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-brand-600"
+        >
+          Undo
+        </button>
+      }
+      <button
+        type="button"
+        (click)="notice.set(null)"
+        aria-label="Dismiss"
+        class="grid size-9 place-items-center rounded-xl transition hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-brand-600"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          class="size-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M6 6l12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+  }
+</div>
+
+@if (showForm()) {
+  <section id="new-goal-panel" aria-labelledby="new-goal-title" class="card mb-6 p-5 sm:p-6">
+    <h2 id="new-goal-title" class="text-lg font-semibold tracking-tight text-slate-900">
+      {{ savings.goals().length === 0 ? 'Create your first goal' : 'New goal' }}
+    </h2>
+    <p class="mb-5 mt-1 text-sm text-slate-700">
+      Every deposit comes out of today's budget, so you save without feeling it.
+    </p>
+    <app-savings-goal-form (created)="createGoal($event)" />
+  </section>
+}
+
+@if (savings.goals().length > 0) {
+  <section aria-labelledby="goals-title">
+    <h2 id="goals-title" class="sr-only">My goals</h2>
+    <ul class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      @for (goal of savings.goals(); track goal.id) {
+        <li>
+          <app-savings-goal-card
+            [goal]="goal"
+            [available]="savings.available()"
+            (contribute)="report(savings.contribute(goal.id, $event))"
+            (transferLeftover)="report(savings.transferLeftover(goal.id))"
+            (remove)="removeGoal(goal)"
+          />
+        </li>
+      }
+    </ul>
+  </section>
+}

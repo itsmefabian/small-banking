@@ -1,0 +1,99 @@
+<form [formRoot]="transactionForm" class="grid gap-5">
+  <fieldset>
+    <legend class="sr-only">Transaction type</legend>
+    <div class="segmented">
+      <label class="segment has-checked:text-red-700!">
+        <input
+          type="radio"
+          name="tx-type"
+          value="expense"
+          class="sr-only"
+          [checked]="isExpense()"
+          (change)="setType('expense')"
+        />
+        Expense
+      </label>
+      <label class="segment has-checked:text-emerald-800!">
+        <input
+          type="radio"
+          name="tx-type"
+          value="income"
+          class="sr-only"
+          [checked]="!isExpense()"
+          (change)="setType('income')"
+        />
+        Income
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="grid gap-2">
+    <label for="tx-amount" class="text-sm font-medium text-slate-700">Amount</label>
+    <div class="field flex items-center gap-1 py-1">
+      <span class="text-4xl font-semibold text-slate-500" aria-hidden="true">{{
+        currencySymbol
+      }}</span>
+      <input
+        id="tx-amount"
+        type="number"
+        inputmode="decimal"
+        step="0.01"
+        placeholder="0.00"
+        autofocus
+        [formField]="transactionForm.amount"
+        [attr.aria-invalid]="
+          transactionForm.amount().touched() && transactionForm.amount().invalid()
+        "
+        aria-describedby="tx-amount-errors"
+        class="w-full min-w-0 bg-transparent py-2 text-4xl font-semibold tracking-tight tabular-nums text-slate-900 outline-none placeholder:text-slate-400"
+      />
+    </div>
+    <div id="tx-amount-errors" aria-live="polite">
+      @if (transactionForm.amount().touched()) {
+        @for (error of transactionForm.amount().errors(); track error.kind) {
+          <p class="text-sm font-medium text-red-700">{{ error.message }}</p>
+        }
+      }
+    </div>
+    <fieldset class="flex flex-wrap gap-2">
+      <legend class="sr-only">Quick amounts</legend>
+      @for (quick of quickAmounts; track quick) {
+        <button
+          type="button"
+          class="chip"
+          (click)="transactionForm.amount().value.set(quick)"
+          [attr.aria-pressed]="transactionForm.amount().value() === quick"
+        >
+          {{ quick | currency: undefined : 'symbol' : '1.0-0' }}
+        </button>
+      }
+    </fieldset>
+  </div>
+
+  <div class="grid gap-2">
+    <label for="tx-description" class="text-sm font-medium text-slate-700">
+      Description <span class="font-normal text-slate-600">(optional)</span>
+    </label>
+    <input
+      id="tx-description"
+      type="text"
+      autocomplete="off"
+      enterkeyhint="done"
+      class="field"
+      [placeholder]="isExpense() ? 'e.g. Coffee, groceries…' : 'e.g. Salary, refund…'"
+      [formField]="transactionForm.description"
+    />
+  </div>
+
+  <button
+    type="submit"
+    class="btn text-white shadow-lg"
+    [class]="
+      isExpense()
+        ? 'bg-red-700 shadow-red-700/25 hover:bg-red-800'
+        : 'bg-emerald-700 shadow-emerald-700/25 hover:bg-emerald-800'
+    "
+  >
+    {{ isExpense() ? 'Add expense' : 'Add income' }}
+  </button>
+</form>

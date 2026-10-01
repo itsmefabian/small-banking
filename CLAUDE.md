@@ -1,5 +1,33 @@
 You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
 
+## Project: Small Banking
+
+A mobile-first PWA for daily budgeting and micro-savings. See `README.md` for features and the full folder map.
+
+### Commands
+
+- `npm start`: dev server (the service worker is disabled in dev)
+- `npm test -- --watch=false`: run unit tests once (Vitest)
+- `npm run build`: production build, including the service worker
+- `npx prettier --write "src/app/**/*.{ts,html}"`: format (100 cols, single quotes)
+
+### Layering rules
+
+- Dependencies point inward: `pages` → `application` → `domain`. `data` implements persistence for `application`.
+- `domain/` is pure TypeScript: no Angular, no I/O, no `new Date()` for "today" (use `Clock` from `core/time`).
+- `ui/` components are presentational: `input()`/`output()` only, never inject feature services. Only `pages/` containers inject services.
+- Never use `localStorage` directly. Depend on `KeyValueStorage` (`core/storage`) and validate whatever you read back.
+- `features/savings/` must import nothing outside itself except `@angular/*`. The host may only import from `features/savings/public-api.ts`. Connect it to the rest of the app through adapters in `integration/savings/` (the `SavingsWallet` and `SavingsPersistence` ports). It is being prepared for extraction into a separate library.
+- Mutations that users can trigger by mistake (add/delete) should offer undo: use `Toaster` in the host app, or the page's own notice inside `savings`.
+
+### UI conventions
+
+- UI text is in English. Locale and currency come from `environment.ts` (`LOCALE_ID`, `DEFAULT_CURRENCY_CODE`). Format money with `CurrencyPipe`; get the currency symbol with `injectCurrencySymbol()` (not the deprecated `getCurrencySymbol`).
+- Use Tailwind with the `brand-*` color tokens (not raw `indigo-*`) and the shared utilities from `src/styles.css`: `card`, `field`, `btn`, `btn-primary`, `btn-soft`, `btn-icon`, `chip`, `segmented`, `segment`.
+- Modals use `Sheet` (`shared/ui/sheet`, native `<dialog>`), opened with `[(open)]`.
+- Mobile layout: a floating bottom nav is fixed at the bottom; page actions (FAB, toasts) must sit above it and respect `env(safe-area-inset-bottom)`.
+- Don't convey state by color alone: pair it with text (e.g. the over-budget alert). Body text must be at least `slate-600` on white.
+
 ## TypeScript Best Practices
 
 - Use strict type checking
